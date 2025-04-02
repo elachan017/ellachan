@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ela & Chandra Notes</title>
+    <style>
+        body {
+            font-family: 'Poppins', sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f0f8ff;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+        .container {
+            width: 90%;
+            max-width: 700px;
+            background: white;
+            padding: 80px;
+            border-radius: 15px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+            text-align: center;
+        }
+        h1 {
+            color: #007BFF;
+        }
+        .hidden {
+            display: none;
+        }
+        .input-field, textarea {
+            width: 90%;
+            padding: 15px;
+            font-size: 16px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            margin-bottom: 10px;
+        }
+        textarea {
+            height: 500px;
+            background: #D6EBEE;
+        }
+        .btn {
+            width: auto;
+            padding: 8px 12px;
+            font-size: 14px;
+            margin: 5px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            background-color: #007BFF;
+            color: white;
+            transition: background 0.3s ease;
+        }
+        .btn:hover {
+            background-color: #0056b3;
+        }
+        .notes-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+            gap: 10px;
+            padding: 10px;
+        }
+        .note-box {
+            background: #e3f2fd;
+            padding: 15px;
+            border-radius: 10px;
+            text-align: left;
+            position: relative;
+        }
+        .note-date {
+            font-size: 12px;
+            color: #555;
+        }
+        .edit-btn {
+            position: absolute;
+            top: 5px;
+            right: 5px;
+            background: none;
+            border: none;
+            color: #007BFF;
+            cursor: pointer;
+            font-size: 14px;
+        }
+        .error-message {
+            color: red;
+            margin-bottom: 10px;
+        }
+        #menu h2 {
+            margin-bottom: 20px;
+        }
+        .menu-btn {
+            width: 100%;
+            padding: 15px;
+            font-size: 18px;
+            margin: 10px 0;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            background-color: #007BFF;
+            color: white;
+            text-align: center;
+        }
+    </style>
+    <script>
+        // Global variable for storing notes
+        let notes = [];
+
+        // Check Login function
+        function checkLogin() {
+            let username = document.getElementById('username').value;
+            let password = document.getElementById('password').value;
+            let errorMessage = document.getElementById('errorMessage');
+            if (username === "samancel" && password === "0817") {
+                document.getElementById('loginContainer').classList.add('hidden');
+                document.getElementById('notesContainer').classList.remove('hidden');
+            } else {
+                errorMessage.classList.remove('hidden');
+            }
+        }
+		// Function for logging out
+			function logout() {
+				document.getElementById('loginContainer').classList.remove('hidden');
+				document.getElementById('notesContainer').classList.add('hidden');
+			}
+
+        // Handle Enter key press for login
+        function handleKeyPress(event) {
+            if (event.key === "Enter") {
+                checkLogin();
+            }
+        }
+
+        // Show the New Note Section
+        function showNewNote() {
+            document.getElementById('noteSection').classList.remove('hidden');
+            document.getElementById('savedNotesSection').classList.add('hidden');
+        }
+
+        // Show the Saved Notes Section
+        function showSavedNotes() {
+            document.getElementById('savedNotesSection').classList.remove('hidden');
+            document.getElementById('noteSection').classList.add('hidden');
+            displaySavedNotes();
+        }
+
+        // Save the note to the notes array
+        function saveNote() {
+            let noteContent = document.getElementById('note').value;
+            if (noteContent) {
+                let newNote = {
+                    content: noteContent,
+                    dateCreated: new Date().toLocaleString(),
+                    dateModified: new Date().toLocaleString(),
+                };
+                notes.push(newNote);
+                document.getElementById('note').value = '';  // Clear the textarea
+                alert('Note saved successfully!');
+                displaySavedNotes();
+            } else {
+                alert('Please write something before saving.');
+            }
+        }
+
+        // Clear the note text area
+        function clearNote() {
+            document.getElementById('note').value = '';
+        }
+
+        // Display saved notes in the grid
+        function displaySavedNotes() {
+            let notesList = document.getElementById('notesList');
+            notesList.innerHTML = '';  // Clear previous notes
+
+            if (notes.length === 0) {
+                notesList.innerHTML = '<p>No notes saved yet.</p>';
+                return;
+            }
+
+            notes.forEach((note, index) => {
+                let noteElement = document.createElement('div');
+                noteElement.classList.add('note-box');
+                noteElement.innerHTML = `
+                    <p>${note.content}</p>
+                    <p class="note-date">Created: ${note.dateCreated}</p>
+                    <p class="note-date">Modified: ${note.dateModified}</p>
+                    <button class="edit-btn" onclick="editNote(${index})">Edit</button>
+                `;
+                notesList.appendChild(noteElement);
+            });
+        }
+
+        // Edit a note
+        function editNote(index) {
+            let note = notes[index];
+            document.getElementById('note').value = note.content;
+            notes.splice(index, 1);  // Remove the old note
+            showNewNote();  // Go back to creating a new note
+        }
+
+        // Go back to the menu
+        function goBack() {
+            document.getElementById('noteSection').classList.add('hidden');
+            document.getElementById('savedNotesSection').classList.add('hidden');
+        }
+
+        // Search for notes
+        function searchNotes() {
+            let searchQuery = document.getElementById('searchNotes').value.toLowerCase();
+            let filteredNotes = notes.filter(note => note.content.toLowerCase().includes(searchQuery));
+            displayFilteredNotes(filteredNotes);
+        }
+
+        // Display filtered notes based on search
+        function displayFilteredNotes(filteredNotes) {
+            let notesList = document.getElementById('notesList');
+            notesList.innerHTML = '';
+
+            if (filteredNotes.length === 0) {
+                notesList.innerHTML = '<p>No matching notes found.</p>';
+                return;
+            }
+
+            filteredNotes.forEach((note, index) => {
+                let noteElement = document.createElement('div');
+                noteElement.classList.add('note-box');
+                noteElement.innerHTML = `
+                    <p>${note.content}</p>
+                    <p class="note-date">Created: ${note.dateCreated}</p>
+                    <p class="note-date">Modified: ${note.dateModified}</p>
+                    <button class="edit-btn" onclick="editNote(${index})">Edit</button>
+                `;
+                notesList.appendChild(noteElement);
+            });
+        }
+    </script>
+</head>
+<body>
+    <div class="container" id="loginContainer">
+        <h1>Login</h1>
+        <p id="errorMessage" class="error-message hidden">Incorrect username or password!</p>
+        <input type="text" id="username" class="input-field" placeholder="Username">
+        <input type="password" id="password" class="input-field" placeholder="Password" onkeypress="handleKeyPress(event)">
+        <button class="btn" onclick="checkLogin()">Login</button>
+    </div>
+    <div class="container hidden" id="notesContainer">
+        <h1>Hello Ella and Chandra</h1>
+        <div id="menu">
+            <button class="menu-btn" onclick="showNewNote()">Create Notes</button>
+            <button class="menu-btn" onclick="showSavedNotes()">Saved Notes</button>
+			<button class="btn" onclick="logout()">Logout</button>
+
+        </div>
+        <div id="noteSection" class="hidden">
+            <textarea id="note" placeholder="Write your note here..."></textarea>
+            <button class="btn" onclick="saveNote()">Save</button>
+            <button class="btn" onclick="clearNote()">Clear</button>
+            <button class="btn" onclick="goBack()">Back</button>
+        </div>
+        <div id="savedNotesSection" class="hidden">
+            <h2>Saved Notes</h2>
+            <input type="text" id="searchNotes" class="input-field" placeholder="Search notes..." onkeyup="searchNotes()">
+            <div class="notes-grid" id="notesList"></div>
+            <button class="btn" onclick="goBack()">Back</button>
+        </div>
+    </div>
+</body>
+</html>
